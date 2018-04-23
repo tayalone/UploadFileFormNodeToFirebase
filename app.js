@@ -67,24 +67,43 @@ var bucket = fbAdmin.storage().bucket();
 const options = {
     prefix: 'Images/',
   };
-bucket.getFiles(options)
-  .then((res) => {
-      files = res[0]
+// bucket.getFiles(options)
+//   .then((res) => {
+//       files = res[0]
       
-      const promisedOBJ = files.map((file) => {
-            return bucket.file(file.name).delete()
-                .then((data) => { return true })
+//       const promisedOBJ = files.map((file) => {
+//             return bucket.file(file.name).delete()
+//                 .then((data) => { return true })
+//                 .catch((err) => { return false})
+//         })
+//         return Promise.all(promisedOBJ)
+//         .then((values) => {return values})
+//   })
+//   .then((values) => {
+//         if(values){ console.log("File(Firebase) was deleted "+values.length+" files")
+//         }else{ console.log("File(Firebase) was deleted 0 files")}
+//   })
+//   .catch((err) => { console.log(err)})
+
+// ======== get sign url ===================
+bucket.getFiles(options)
+    .then((res) => {
+        const files = res[0]
+        const promisedOBJ = files.map((file) => {
+            return bucket.file(file.name).getSignedUrl({action: 'read',expires: '03-17-2025'})
+                .then((res) => { return res[0] })
                 .catch((err) => { return false})
         })
         return Promise.all(promisedOBJ)
-        .then((values) => {return values})
-  })
-  .then((values) => {
-        if(values){ console.log("File(Firebase) was deleted "+values.length+" files")
-        }else{ console.log("File(Firebase) was deleted 0 files")}
-  })
-  .catch((err) => { console.log(err)})
-
+            .then((values) => {return values})
+    })
+    .then((values) => {
+        console.log(values)
+    })
+    .catch((err)=>{
+        console.log(err)
+    })
+// ===============================
 //-------------------------------------------------------
 // --------- Router --------------------------------------
 app.get("/",(req, res) => {
