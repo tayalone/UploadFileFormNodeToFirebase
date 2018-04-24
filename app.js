@@ -22,15 +22,14 @@ app.use(bodyParser.urlencoded({
 // -------- Multer --------------------
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-        //console.log(file)
       cb(null, './tmp')
     },
     filename: function (req, file, cb) {
-        //console.log(file)
       cb(null,  Date.now()+"-"+file.originalname)
     }
 })
 const storage2 = multer.memoryStorage()
+
 const upload = multer({ storage: storage })
 const upload2 = multer({ storage: storage2 })
 //-------------------------------------------------------
@@ -66,44 +65,7 @@ fbAdmin.initializeApp({
 var bucket = fbAdmin.storage().bucket();
 const options = {
     prefix: 'Images/',
-  };
-// bucket.getFiles(options)
-//   .then((res) => {
-//       files = res[0]
-      
-//       const promisedOBJ = files.map((file) => {
-//             return bucket.file(file.name).delete()
-//                 .then((data) => { return true })
-//                 .catch((err) => { return false})
-//         })
-//         return Promise.all(promisedOBJ)
-//         .then((values) => {return values})
-//   })
-//   .then((values) => {
-//         if(values){ console.log("File(Firebase) was deleted "+values.length+" files")
-//         }else{ console.log("File(Firebase) was deleted 0 files")}
-//   })
-//   .catch((err) => { console.log(err)})
-
-// ======== get sign url ===================
-bucket.getFiles(options)
-    .then((res) => {
-        const files = res[0]
-        const promisedOBJ = files.map((file) => {
-            return bucket.file(file.name).getSignedUrl({action: 'read',expires: '03-17-2025'})
-                .then((res) => { return res[0] })
-                .catch((err) => { return false})
-        })
-        return Promise.all(promisedOBJ)
-            .then((values) => {return values})
-    })
-    .then((values) => {
-        console.log(values)
-    })
-    .catch((err)=>{
-        console.log(err)
-    })
-// ===============================
+  }
 //-------------------------------------------------------
 // --------- Router --------------------------------------
 app.get("/",(req, res) => {
@@ -135,16 +97,46 @@ app.post("/uploadMultiFB",upload2.array('photos',5), (req,res) => {
             .then(url => { return url})
     })
     Promise.all(promObj)
-        .then((values) => {
-            return values
-        })
-        .then((values) => {
-            res.send(JSON.stringify(values))
-        })
-        .catch((err) => {
-            res.send(err)
-        })
+        .then((values) => { return values })
+        .then((values) => { res.send(JSON.stringify(values))})
+        .catch((err) => { res.send(err) })
 
+})
+
+app.get("/clearImageFB",(req, res) => {
+    bucket.getFiles(options)
+    .then((res) => {
+        files = res[0]   
+        const promisedOBJ = files.map((file) => {
+                return bucket.file(file.name).delete()
+                    .then((data) => { return true })
+                    .catch((err) => { return false})
+            })
+            return Promise.all(promisedOBJ)
+            .then((values) => {return values})
+    })
+    .then((values) => { res.send({success: true}) })
+    .catch((err) => { res.send({success: false}) })
+    })
+
+app.get("/getSignUrl", (req, res) => {
+    bucket.getFiles(options)
+    .then((res) => {
+        const files = res[0]
+        const promisedOBJ = files.map((file) => {
+            return bucket.file(file.name).getSignedUrl({action: 'read',expires: '03-17-2025'})
+                .then((res) => { return res[0] })
+                .catch((err) => { return false})
+        })
+        return Promise.all(promisedOBJ)
+            .then((values) => {return values})
+    })
+    .then((values) => {
+        res.send({signUrl : values})
+    })
+    .catch((err)=>{
+        res.send({success: false})
+    })
 })
 
 //--------------------------------------------------------
